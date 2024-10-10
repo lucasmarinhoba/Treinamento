@@ -1,0 +1,169 @@
+import pygame
+import sys
+
+# Inicializa o Pygame
+pygame.init()
+
+# Fonte
+fonte_adventure = pygame.font.Font("adventure.otf", 23)
+# Configura a janela inicial (tamanho normal)
+screen = pygame.display.set_mode((600, 600))  # Tamanho da janela original
+pygame.display.set_caption("Indiana Jones e a Caça ao Tesouro")
+
+# Cores
+BRANCO = (255, 255, 255)
+PRETO = (0, 0, 0)
+AMARELO = (255, 204, 0)
+
+# Carregar imagens no formato JPEG
+imagem_fundo = pygame.image.load("indiana.png")  # Imagem de fundo
+imagem_fundo = pygame.transform.scale(imagem_fundo, (640, 400))  # Ajusta o tamanho da imagem
+
+# Carregar as imagens dos botões
+imagem_iniciar = pygame.image.load("iniciar200.png")  # Imagem do botão "Iniciar Jogo"
+imagem_regras = pygame.image.load("regras200.png")  # Imagem do botão "Regras"
+imagem_iniciar = pygame.transform.scale(imagem_iniciar, (152, 32))  # Ajusta o tamanho da imagem do botão
+imagem_regras = pygame.transform.scale(imagem_regras, (152, 32))  # Ajusta o tamanho da imagem do botão
+
+# Posições das imagens
+pos_iniciar = (210, 270)  # Posição da imagem "Iniciar Jogo"
+pos_regras = (210, 320)  # Posição da imagem "Regras"
+
+# Função para exibir a imagem de introdução por 5 segundos
+def mostrar_intro():
+    imagem_intro = pygame.image.load("telainicial.png")  # Imagem de introdução
+    imagem_intro = pygame.transform.scale(imagem_intro, (600, 400))  # Ajusta o tamanho da imagem para 600x400
+    screen = pygame.display.set_mode((600, 400))  # Redimensiona a janela para o tamanho da imagem
+
+    # Limpa a tela com a cor preta
+    screen.fill((0, 0, 0))  # Cor preta
+
+    # Desenha a imagem na tela
+    screen.blit(imagem_intro, (0, 0))  # Desenha a imagem na tela
+    pygame.display.flip()  # Atualiza a tela para mostrar a tela preta e a imagem simultaneamente
+
+    pygame.time.delay(5000)  # Aguarda 5 segundos
+
+    # Retorna ao tamanho original da janela
+    screen = pygame.display.set_mode((600, 400))  # Retorna ao tamanho original
+    pygame.display.set_caption("Início")  # Atualiza o título
+
+# Função para desenhar o menu
+def desenhar_menu():
+    screen.blit(imagem_fundo, (0, 0))  # Desenha a imagem de fundo
+    screen.blit(imagem_iniciar, pos_iniciar)  # Desenha o botão "Iniciar Jogo"
+    screen.blit(imagem_regras, pos_regras)  # Desenha o botão "Regras"
+    pygame.display.flip()
+
+# Carregar a imagem do botão "Retornar"
+imagem_retornar = pygame.image.load("retornar200.png")  # Imagem do botão "Retornar"
+imagem_retornar = pygame.transform.scale(imagem_retornar, (111, 27))  # Ajusta o tamanho da imagem do botão
+
+# Carregar a imagem da tela de regras
+imagem_tela_regras = pygame.image.load("telaregras2.png")
+imagem_tela_regras = pygame.transform.scale(imagem_tela_regras, (600, 400))  # Ajusta o tamanho da imagem
+
+def desenhar_regras():
+    screen.blit(imagem_tela_regras, (0, 0))  # Desenha a imagem de fundo das regras
+    linhas_regras = [
+        "1 - O jogo é PvP;",
+        "2 - Cada tesouro vale 100 pontos;",
+        "3 - Ao cair no buraco, o jogador perde 50 pontos;",
+        "4 - O jogo termina quando todas as casas são reveladas;",
+        "5 - Vence quem tiver maior pontuação."
+    ]
+    
+    y_offset = 50  # Posição inicial vertical
+    for linha in linhas_regras:
+        # Renderiza o texto com gradiente vertical
+        linha_renderizada = render_gradient_text(linha, fonte_adventure, (255, 0, 0), (255, 255, 0))  
+        screen.blit(linha_renderizada, (20, y_offset))  # Desenha na tela
+        y_offset += 60  # Ajuste o espaçamento entre as linhas
+
+    # Desenha a imagem "Retornar"
+    screen.blit(imagem_retornar, (250, 350))  # Botão "Retornar"
+    pygame.display.flip()
+
+# Função para renderizar o texto com gradiente vertical
+def render_gradient_text(text, font, start_color, end_color):
+    text_surface = font.render(text, True, (255, 255, 255))  # Renderizamos o texto normalmente
+    width, height = text_surface.get_size()
+    
+    # Criar uma superfície para o gradiente
+    gradient_surface = pygame.Surface((width, height), pygame.SRCALPHA)
+    
+    # Aplicar o gradiente linha por linha
+    for y in range(height):
+        color_factor = y / height  # Fator de gradiente para cada linha
+        color = interpolate_color(start_color, end_color, color_factor)
+        
+        # Criar uma linha horizontal da cor interpolada
+        pygame.draw.line(gradient_surface, color, (0, y), (width, y))
+    
+    # Colocar o texto renderizado na superfície com gradiente
+    text_surface.blit(gradient_surface, (0, 0), special_flags=pygame.BLEND_RGBA_MULT)
+    
+    return text_surface
+
+# Função para interpolar as cores
+def interpolate_color(color1, color2, factor):
+    return (
+        int(color1[0] + (color2[0] - color1[0]) * factor),
+        int(color1[1] + (color2[1] - color1[1]) * factor),
+        int(color1[2] + (color2[2] - color1[2]) * factor),
+    )
+
+# Função para verificar eventos no menu
+def verificar_eventos_menu():
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            pygame.quit()
+            sys.exit()
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if pos_iniciar[0] < event.pos[0] < pos_iniciar[0] + imagem_iniciar.get_width() and \
+               pos_iniciar[1] < event.pos[1] < pos_iniciar[1] + imagem_iniciar.get_height():
+                print("Iniciar Jogo!")  # Aqui você pode substituir pela lógica de iniciar o jogo
+                return "iniciar"  # Inicia o jogo
+            if pos_regras[0] < event.pos[0] < pos_regras[0] + imagem_regras.get_width() and \
+               pos_regras[1] < event.pos[1] < pos_regras[1] + imagem_regras.get_height():
+                print("Ler Regras!")  # Exibe as regras
+                return "regras"  # Vai para as regras
+    return None
+
+# Função para verificar eventos nas regras
+def verificar_eventos_regras():
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            pygame.quit()
+            sys.exit()
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            # Ajustar a lógica para a nova posição do botão "Retornar"
+            if 250 < event.pos[0] < 250 + imagem_retornar.get_width() and \
+               350 < event.pos[1] < 350 + imagem_retornar.get_height():  # Verifica o botão "Retornar"
+                print("Voltando ao Menu!")
+                return True
+    return False
+
+# Função para rodar o menu
+def menu_principal():
+    mostrar_intro()  # Exibe a introdução antes do menu
+    pygame.mixer.music.load('temamusica.mp3')  # Substitua pelo caminho da sua música
+    pygame.mixer.music.play(-1)  # -1 para tocar em loop infinito
+    rodando = True
+    em_regras = False  # Controle se estamos lendo as regras
+    while rodando:
+        if em_regras:
+            desenhar_regras()
+            if verificar_eventos_regras():
+                em_regras = False  # Volta para o menu
+        else:
+            desenhar_menu()
+            acao = verificar_eventos_menu()
+            if acao == "iniciar":
+                rodando = False  # Simula o início do jogo ao clicar no botão "Iniciar Jogo"
+            elif acao == "regras":
+                em_regras = True  # Exibe a tela de regras
+
+# Testar apenas o menu
+menu_principal()
+ 
